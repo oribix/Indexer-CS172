@@ -11,7 +11,7 @@ import org.apache.lucene.document.*;
 //Handle different fields like title, body, creation date (if available).
 public class Indexer {
     
-    public static final Version version = Version.LUCENE_6_3_0;
+    private IndexWriter writer;
     
     //gets indexWriter
     //returns indexWriter on success or null on failure
@@ -25,25 +25,25 @@ public class Indexer {
         }catch(Exception e){
             e.printStackTrace();
         }
-        
         return null;
     }
     
-    ////gets document
-    ////returns Document on success, null on failure
-    //protected Document getDocument(File f){
-    //    Document doc = null;
-    //    try {
-    //        FileReader fileReader = new FileReader(f);
-    //        doc.add(new TextField("contents", fileReader));
-    //        doc.add(new StringField("filename", f.getName()));
-    //        doc.add(new StringField("fullpath", f.getCanonicalPath()));
-    //    } catch (FileNotFoundException e) {
-    //        e.printStackTrace();
-    //    }
-    //    
-    //    return doc;
-    //}
+    //gets document Throws IOException if something goes wrong
+    protected Document getDocument(File f) throws IOException{
+        Document doc = new Document();
+        FileReader fileReader = new FileReader(f);
+        doc.add(new TextField("contents", fileReader));
+        doc.add(new StringField("filename", f.getName(), Field.Store.YES));
+        doc.add(new StringField("fullpath", f.getCanonicalPath(), Field.Store.YES));
+        return doc;
+    }
+    
+    private void indexFile(File f) throws IOException {
+        Document doc = getDocument(f);
+        writer.addDocument(doc);
+    }
+    
+    
     
     public static void main(String[] args) {
         //prints error message if arguments are wrong then exits
