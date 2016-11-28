@@ -44,9 +44,8 @@ public class Searcher {
             return;
         }
         
-        for(String arg : args){
-            System.out.println(arg);
-        }
+        System.out.println("Index Location: " + args[0]);
+        System.out.println("Search Query: \"" + args[1] + "\"\n");
         
         try {
             search(args[0], args[1]);
