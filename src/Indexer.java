@@ -1,5 +1,8 @@
 import java.io.*;
 import java.nio.file.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 //Lucene libraries
 import org.apache.lucene.index.*;
@@ -10,11 +13,12 @@ import org.apache.lucene.document.*;
 //Handle different fields like title, body, creation date (if available).
 public class Indexer {
     
-    private IndexWriter writer;
+    private static IndexWriter writer;
+    private static List<DocUrlPair> docUrlPairs;
     
     //gets indexWriter
     //returns indexWriter on success or null on failure
-    IndexWriter getIndexWriter(String dir){
+    private static IndexWriter getIndexWriter(String dir){
         Path indexPath = null;
         try{
             indexPath = Paths.get(dir);
@@ -27,24 +31,33 @@ public class Indexer {
         return null;
     }
     
+    //returns the URL of the document
+    private static String getDocUrl(File f){
+        
+        return "";
+    }
+    
     //gets document Throws IOException if something goes wrong
-    protected Document getDocument(File f) throws IOException{
+    protected static Document getDocument(File f) throws IOException{
         Document doc = new Document();
         FileReader fileReader = new FileReader(f);
         
         //add fields to the document
+        doc.add(new StringField("URL", getDocUrl(f), Field.Store.YES));
         doc.add(new TextField("contents", fileReader));
-        doc.add(new StringField("filename", f.getName(), Field.Store.YES));         //IDK if it should be yes or no
-        doc.add(new StringField("fullpath", f.getCanonicalPath(), Field.Store.YES));//IDK if it should be yes or no
+        doc.add(new StringField("filename", f.getName(), Field.Store.YES));
+        doc.add(new StringField("fullpath", f.getCanonicalPath(), Field.Store.YES));
         return doc;
     }
     
-    private void indexFile(File f) throws IOException {
+    //indexes a file
+    private static void indexFile(File f) throws IOException {
         Document doc = getDocument(f);
         writer.addDocument(doc);
     }
     
-    public int index(String dataDir, FileFilter filter) throws IOException{
+    //indexes a folder of .html files
+    public static int index(String dataDir, FileFilter filter) throws IOException{
         Path docPath = Paths.get(dataDir);
         File docFolder = docPath.toFile();
         File[] files = docFolder.listFiles(filter);
@@ -57,7 +70,8 @@ public class Indexer {
         return writer.numDocs();
     }
     
-    public void close() throws IOException{
+    //closes the IndexWriter
+    public static void close() throws IOException{
         writer.close();
     }
     
@@ -69,23 +83,63 @@ public class Indexer {
             return;
         }
         
-        Indexer indexer = new Indexer();
-        indexer.writer = indexer.getIndexWriter(args[0]);
+        //gets the argument variables
+        String indexDir = args[0];
+        String docStoreDir = args[1];
         
-        //stops the program if getIndexWriter fails
-        if(indexer.writer == null){
-            System.out.println("getIndexWriter failed!");
-            return;
-        }
+        //holds the doc-url mapping for all docs
+        docUrlPairs = new LinkedList<DocUrlPair>();
         
-        FileFilter filter = new DocFilter();
+        //getting _url_doc_map.txt
+        Path docStorePath = Paths.get(docStoreDir);
+        File[] docStoreFiles = docStorePath.toFile().listFiles();
+        File urlDocPairFile = docStoreFiles[docStoreFiles.length - 1];
+        
+        //parsing _url_doc_map.txt for the mappings
         try {
-            indexer.index(args[1], filter);
-            indexer.close();
+            BufferedReader br = new BufferedReader(new FileReader(urlDocPairFile));
+            String s = "";
+            while((s = br.readLine()) != null){
+                StringTokenizer st = new StringTokenizer(s);
+                LinkedList<String> tokens = new LinkedList<String>();
+                while(st.hasMoreTokens()){
+                    tokens.add(st.nextToken());
+                }
+                
+                String docName = tokens.pollLast();
+                String URL = "";
+                for(String token : tokens){
+                    if(token == tokens.getFirst()) URL += token;
+                    else URL += " " + token;
+                }
+                DocUrlPair docUrlPair = new DocUrlPair(docName, URL);
+                docUrlPairs.add(docUrlPair);
+            }
+            br.close();
         } catch (IOException e) {
             e.printStackTrace();
+            System.out.println("Something wrong with _url_doc_map.txt");
             return;
         }
         
+        docUrlPairs.sort(null);
+        
+        //writer = getIndexWriter(indexDir);
+        //
+        ////stops the program if getIndexWriter fails
+        //if(writer == null){
+        //    System.out.println("getIndexWriter failed!");
+        //    return;
+        //}
+        //
+        //FileFilter filter = new DocFilter();
+        //try {
+        //    index(docStoreDir, filter);
+        //    close();
+        //} catch (IOException e) {
+        //    e.printStackTrace();
+        //    return;
+        //}
+        //
     }
 }
