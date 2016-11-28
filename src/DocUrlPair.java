@@ -5,6 +5,11 @@ public class DocUrlPair implements Comparable<DocUrlPair> {
     public String docName;
     public URL url;
     
+    public DocUrlPair(){
+        this.docName = null;
+        this.url = null;
+    }
+    
     public DocUrlPair(String docName, URL url){
         this.docName = docName;
         this.url = url;
@@ -21,5 +26,9 @@ public class DocUrlPair implements Comparable<DocUrlPair> {
     
     public int compareTo(DocUrlPair other){
         return this.docName.compareTo(other.docName);
+    }
+    
+    public int compareTo(String docName){
+        return this.docName.compareTo(docName);
     }
 }

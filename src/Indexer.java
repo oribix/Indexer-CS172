@@ -3,6 +3,7 @@ import java.nio.file.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.Collections;
 
 //Lucene libraries
 import org.apache.lucene.index.*;
@@ -33,8 +34,12 @@ public class Indexer {
     
     //returns the URL of the document
     private static String getDocUrl(File f){
-        
-        return "";
+        DocUrlPair key = new DocUrlPair();
+        key.docName = f.getName();
+        int index = Collections.binarySearch(docUrlPairs, key);
+        DocUrlPair docUrlPair = docUrlPairs.get(index);
+        System.out.println(docUrlPair.toString());
+        return docUrlPair.url.toString();
     }
     
     //gets document Throws IOException if something goes wrong
@@ -62,8 +67,8 @@ public class Indexer {
         File docFolder = docPath.toFile();
         File[] files = docFolder.listFiles(filter);
         
+        System.out.println("indexing...");
         for(File f : files){
-            System.out.println(f);
             indexFile(f);
         }
         
@@ -124,22 +129,19 @@ public class Indexer {
         
         docUrlPairs.sort(null);
         
-        //writer = getIndexWriter(indexDir);
-        //
-        ////stops the program if getIndexWriter fails
-        //if(writer == null){
-        //    System.out.println("getIndexWriter failed!");
-        //    return;
-        //}
-        //
-        //FileFilter filter = new DocFilter();
-        //try {
-        //    index(docStoreDir, filter);
-        //    close();
-        //} catch (IOException e) {
-        //    e.printStackTrace();
-        //    return;
-        //}
-        //
+        //stops the program if getIndexWriter fails
+        if((writer = getIndexWriter(indexDir)) == null){
+            System.out.println("getIndexWriter failed!");
+            return;
+        }
+        
+        FileFilter filter = new DocFilter();
+        try {
+            index(docStoreDir, filter);
+            close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
     }
 }
