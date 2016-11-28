@@ -10,6 +10,9 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.store.*;
 import org.apache.lucene.document.*;
 
+//jsoup
+import org.jsoup.Jsoup;
+
 //Write a program that uses the Lucene libraries to index all the html files in the folder you created in Part A
 //Handle different fields like title, body, creation date (if available).
 public class Indexer {
@@ -42,13 +45,25 @@ public class Indexer {
         return docUrlPair.url.toString();
     }
     
+    //returns title of page
+    private static String getDocTitle(File f){
+        String title = "";
+        try {
+            title = Jsoup.parse(f, "UTF-8", "").title();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return title;
+    }
+    
     //gets document Throws IOException if something goes wrong
     protected static Document getDocument(File f) throws IOException{
         Document doc = new Document();
         FileReader fileReader = new FileReader(f);
         
         //add fields to the document
-        doc.add(new StringField("URL", getDocUrl(f), Field.Store.YES));
+        doc.add(new StringField("url", getDocUrl(f), Field.Store.YES));
+        doc.add(new TextField("title", getDocTitle(f), Field.Store.YES));
         doc.add(new TextField("contents", fileReader));
         doc.add(new StringField("filename", f.getName(), Field.Store.YES));
         doc.add(new StringField("fullpath", f.getCanonicalPath(), Field.Store.YES));
