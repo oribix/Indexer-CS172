@@ -41,7 +41,7 @@ public class Indexer {
         key.docName = f.getName();
         int index = Collections.binarySearch(docUrlPairs, key);
         DocUrlPair docUrlPair = docUrlPairs.get(index);
-        System.out.println(docUrlPair.toString());
+        System.out.println(docUrlPair.toString()); //prints pairing so we keep track of progress
         return docUrlPair.url.toString();
     }
     
