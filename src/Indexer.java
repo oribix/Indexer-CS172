@@ -70,8 +70,18 @@ public class Indexer {
         
         //add fields to the document
         doc.add(new StringField("url", getDocUrl(f), Field.Store.YES));
-        doc.add(new TextField("title", getDocTitle(f), Field.Store.YES));
-        doc.add(new TextField("contents", fileReader));
+        
+        //add title field with an extra boost
+        TextField title = new TextField("title", getDocTitle(f), Field.Store.YES);
+        title.setBoost(5);
+        doc.add(title);
+        
+        //boost score for contents
+        TextField contents = new TextField("contents", fileReader);
+        contents.setBoost(3);
+        doc.add(contents);
+        
+        //filename and file path fields
         doc.add(new StringField("filename", f.getName(), Field.Store.YES));
         doc.add(new StringField("fullpath", f.getCanonicalPath(), Field.Store.YES));
         return doc;
