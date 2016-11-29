@@ -29,7 +29,7 @@ public class Searcher {
         
         for(ScoreDoc scoreDoc : hits.scoreDocs){
             Document doc = is.doc(scoreDoc.doc);
-            System.out.println(doc.get("url"));
+            System.out.println(scoreDoc.score + " " + doc.get("url"));
         }
         reader.close();
     }
