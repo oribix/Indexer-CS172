@@ -37,12 +37,19 @@ public class Indexer {
     
     //returns the URL of the document
     private static String getDocUrl(File f){
+        String result = "";
         DocUrlPair key = new DocUrlPair();
         key.docName = f.getName();
         int index = Collections.binarySearch(docUrlPairs, key);
-        DocUrlPair docUrlPair = docUrlPairs.get(index);
-        System.out.println(docUrlPair.toString()); //prints pairing so we keep track of progress
-        return docUrlPair.url.toString();
+        try{
+            DocUrlPair docUrlPair = docUrlPairs.get(index);
+            System.out.println(docUrlPair.toString()); //prints pairing so we keep track of progress
+            result = docUrlPair.url.toString(); 
+        } catch(IndexOutOfBoundsException e){
+            e.printStackTrace();
+        }
+        
+        return result;
     }
     
     //returns title of page
@@ -78,15 +85,18 @@ public class Indexer {
     
     //indexes a folder of .html files
     public static int index(String dataDir, FileFilter filter) throws IOException{
+        //gets list of all .html files in folder
         Path docPath = Paths.get(dataDir);
         File docFolder = docPath.toFile();
         File[] files = docFolder.listFiles(filter);
         
+        //indexes each file
         System.out.println("indexing...");
         for(File f : files){
             indexFile(f);
         }
         
+        //return number of documents indexed
         return writer.numDocs();
     }
     
@@ -152,11 +162,17 @@ public class Indexer {
         
         FileFilter filter = new DocFilter();
         try {
-            index(docStoreDir, filter);
-            close();
+            int numIndexed = index(docStoreDir, filter);
+            System.out.println(numIndexed + " files indexed");
         } catch (IOException e) {
             e.printStackTrace();
             return;
+        } finally {
+            try {
+                close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
